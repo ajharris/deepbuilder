@@ -1,0 +1,58 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+*.sqlite3
+
+# Flask cache and logs
+instance/
+*.log
+
+# React
+frontend/node_modules/
+frontend/build/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# macOS
+.DS_Store
+
+# VSCode
+.vscode/
+
+# JetBrains (PyCharm, WebStorm)
+.idea/
+
+# OS junk
+Thumbs.db
+ehthumbs.db
+
+# Coverage reports
+htmlcov/
+coverage.xml
+*.cover
+.pytest_cache/
+.cache/
+.nox/
+
+# Testing & pip
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Heroku
+*.orig
+*.bak
+
+# Logs
+*.log
+
+# Jupyter
+.ipynb_checkpoints/
+
+# React Testing Coverage
+frontend/coverage/
