@@ -32,5 +32,15 @@ class TestFlaskBackend(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json, {"message": "Hello from Flask!"})
 
+    def test_api_hello_route_error_handling(self):
+        with self.app.application.app_context():
+            @self.app.application.route('/api/error')
+            def error_route():
+                return {"error": "Something went wrong"}, 500
+
+        response = self.app.get('/api/error')
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.json, {"error": "Something went wrong"})
+
 if __name__ == "__main__":
     unittest.main()
