@@ -5,7 +5,10 @@ function App() {
   const [msg, setMsg] = useState("");
 
   useEffect(() => {
-    axios.get("/api/hello").then((res) => setMsg(res.data.message));
+    axios
+      .get("/api/hello")
+      .then((res) => setMsg(res.data.message))
+      .catch(() => setMsg("Error fetching data"));
   }, []);
 
   return (
