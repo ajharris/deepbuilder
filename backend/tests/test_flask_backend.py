@@ -46,5 +46,40 @@ class TestFlaskBackend(unittest.TestCase):
         response = self.app.get("/api/hello")
         self.assertIn("Access-Control-Allow-Origin", response.headers, "CORS headers should be present in the response")
 
+    def test_post_modelconfig_valid_payload(self):
+        valid_payload = {
+            "model_type": "neural_network",
+            "hyperparameters": {
+                "epochs": 10,
+                "batch_size": 32
+            }
+        }
+        response = self.app.post("/api/modelconfig", json=valid_payload)
+        self.assertEqual(response.status_code, 201)
+        self.assertIn("id", response.json)
+        self.assertEqual(response.json["message"], "Model configuration saved successfully")
+
+    def test_post_modelconfig_missing_fields(self):
+        invalid_payload = {
+            "model_type": "neural_network"
+        }
+        response = self.app.post("/api/modelconfig", json=invalid_payload)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("error", response.json)
+
+    def test_post_modelconfig_invalid_hyperparameters_type(self):
+        invalid_payload = {
+            "model_type": "neural_network",
+            "hyperparameters": "not_a_dict"
+        }
+        response = self.app.post("/api/modelconfig", json=invalid_payload)
+        self.assertEqual(response.status_code, 422)
+        self.assertIn("error", response.json)
+
+    def test_post_modelconfig_invalid_json(self):
+        response = self.app.post("/api/modelconfig", data="not_a_json", content_type="text/plain")
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("error", response.json)
+
 if __name__ == "__main__":
     unittest.main()
