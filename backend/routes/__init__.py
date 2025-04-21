@@ -34,4 +34,5 @@ def register_routes(app):
             return jsonify({"message": "Model configuration saved successfully", "id": saved_id}), 201
 
         except Exception as e:
-            return jsonify({"error": "An unexpected error occurred", "details": str(e)}), 500
+            app.logger.error("An unexpected error occurred: %s", str(e))
+            return jsonify({"error": "An unexpected error occurred"}), 500
