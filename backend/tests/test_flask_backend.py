@@ -42,5 +42,9 @@ class TestFlaskBackend(unittest.TestCase):
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.json, {"error": "Something went wrong"})
 
+    def test_cors_headers_present(self):
+        response = self.app.get("/api/hello")
+        self.assertIn("Access-Control-Allow-Origin", response.headers, "CORS headers should be present in the response")
+
 if __name__ == "__main__":
     unittest.main()
