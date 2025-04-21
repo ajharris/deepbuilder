@@ -1,20 +1,14 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React from "react";
+import Header from "./components/Header";
+import Message from "./components/Message";
+import Form from "./components/Form";
 
-function App() {
-  const [msg, setMsg] = useState("");
-
-  useEffect(() => {
-    axios
-      .get("/api/hello")
-      .then((res) => setMsg(res.data.message))
-      .catch(() => setMsg("Error fetching data"));
-  }, []);
-
+function App({ setSharedState }) {
   return (
     <div>
-      <h1>DeepBuilder</h1>
-      <p>{msg}</p>
+      <Header />
+      <Message />
+      <Form setSharedState={setSharedState}/>
     </div>
   );
 }
