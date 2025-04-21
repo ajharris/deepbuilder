@@ -1,7 +1,7 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import App from './App';
 import axios from 'axios';
-import { act } from 'react-dom/test-utils';
+import { act } from 'react';
 
 jest.mock('axios');
 
@@ -38,8 +38,10 @@ test('handles backend error gracefully', async () => {
   expect(errorElement).toBeInTheDocument();
 });
 
-test('renders the form with all input fields', () => {
-  render(<App />);
+test('renders the form with all input fields', async () => {
+  await act(async () => {
+    render(<App />);
+  });
 
   expect(screen.getByLabelText(/model type/i)).toBeInTheDocument();
   expect(screen.getByLabelText(/loss function/i)).toBeInTheDocument();
@@ -47,8 +49,10 @@ test('renders the form with all input fields', () => {
   expect(screen.getByLabelText(/learning rate/i)).toBeInTheDocument();
 });
 
-test('updates form state on input change', () => {
-  render(<App />);
+test('updates form state on input change', async () => {
+  await act(async () => {
+    render(<App />);
+  });
 
   const optimizerSelect = screen.getByLabelText(/optimizer/i);
   fireEvent.change(optimizerSelect, { target: { value: 'Adam' } });
@@ -56,7 +60,9 @@ test('updates form state on input change', () => {
 });
 
 test('shows error messages for invalid inputs', async () => {
-  render(<App />);
+  await act(async () => {
+    render(<App />);
+  });
 
   const submitButton = screen.getByText(/submit/i);
   fireEvent.click(submitButton);
@@ -72,7 +78,9 @@ test('shows error messages for invalid inputs', async () => {
 test('submits the form with valid inputs', async () => {
   axios.post.mockResolvedValueOnce({ data: { success: true } });
 
-  render(<App />);
+  await act(async () => {
+    render(<App />);
+  });
 
   fireEvent.change(screen.getByLabelText(/model type/i), { target: { value: 'CNN' } });
   fireEvent.change(screen.getByLabelText(/loss function/i), { target: { value: 'CrossEntropy' } });
@@ -100,7 +108,12 @@ test('updates shared state after form submission', async () => {
 
   const mockSharedState = jest.fn();
   // Replace this with actual dependency injection if App expects a prop
-  render(<App setSharedState={mockSharedState} />);
+  await act(async () => {
+    render(<App setSharedState={mockSharedState} />);
+  });
+  
+  const messageElement = await screen.findByText(/Hello from backend!/i);
+  expect(messageElement).toBeInTheDocument();
 
   fireEvent.change(screen.getByLabelText(/model type/i), { target: { value: 'RNN' } });
   fireEvent.change(screen.getByLabelText(/loss function/i), { target: { value: 'MSE' } });
