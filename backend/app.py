@@ -26,11 +26,35 @@ register_routes(app)
 # In-memory training progress (for demo; in production, use a better store)
 # from backend.routes import training_progress
 
-# Serve React frontend
+# Serve favicon.ico from React build or public directory
+@app.route('/favicon.ico')
+def favicon():
+    build_favicon = os.path.join(app.static_folder, 'favicon.ico')
+    public_favicon = os.path.join(os.path.dirname(__file__), '../../frontend/public/favicon.ico')
+    if os.path.exists(build_favicon):
+        return send_from_directory(app.static_folder, 'favicon.ico')
+    elif os.path.exists(public_favicon):
+        return send_from_directory(os.path.dirname(public_favicon), 'favicon.ico')
+    else:
+        return '', 404
+
+# Serve static files and manifest from React build
+@app.route('/static/<path:filename>')
+def serve_static(filename):
+    return send_from_directory(os.path.join(app.static_folder, 'static'), filename)
+
+@app.route('/manifest.json')
+def serve_manifest():
+    return send_from_directory(app.static_folder, 'manifest.json')
+
+@app.route('/robots.txt')
+def serve_robots():
+    return send_from_directory(app.static_folder, 'robots.txt')
+
+# Serve React frontend (index.html) for all other routes
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_react(path):
-    # Serve static files if they exist, otherwise serve index.html for React Router
     static_file = os.path.normpath(os.path.join(app.static_folder, path))
     if path != "" and static_file.startswith(app.static_folder) and os.path.exists(static_file):
         return send_from_directory(app.static_folder, path)

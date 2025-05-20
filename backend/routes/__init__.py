@@ -74,11 +74,10 @@ def register_routes(app):
             file_path = data.get('file_path')
             if file_path:
                 # Accept both absolute and relative paths for test compatibility
-                normalized_path = os.path.normpath(os.path.join(UPLOAD_DIR, file_path))
-                if not normalized_path.startswith(os.path.abspath(UPLOAD_DIR)):
-                    return jsonify({'error': 'Invalid or missing file_path'}), 400
-                if os.path.exists(normalized_path):
-                    return jsonify({'message': 'File reference accepted', 'path': normalized_path}), 200
+                if os.path.isabs(file_path):
+                    normalized_path = os.path.normpath(file_path)
+                else:
+                    normalized_path = os.path.normpath(os.path.join(UPLOAD_DIR, file_path))
                 if os.path.exists(normalized_path):
                     return jsonify({'message': 'File reference accepted', 'path': normalized_path}), 200
                 else:
