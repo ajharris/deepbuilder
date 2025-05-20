@@ -72,8 +72,12 @@ def register_routes(app):
         elif request.is_json:
             data = request.get_json()
             file_path = data.get('file_path')
-            if file_path and os.path.exists(file_path):
-                return jsonify({'message': 'File reference accepted', 'path': file_path}), 200
+            if file_path:
+                normalized_path = os.path.normpath(os.path.join(UPLOAD_DIR, file_path))
+                if not normalized_path.startswith(UPLOAD_DIR):
+                    return jsonify({'error': 'Invalid file_path'}), 400
+                if os.path.exists(normalized_path):
+                    return jsonify({'message': 'File reference accepted', 'path': normalized_path}), 200
             else:
                 return jsonify({'error': 'Invalid or missing file_path'}), 400
         else:
