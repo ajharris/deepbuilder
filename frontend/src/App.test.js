@@ -131,3 +131,36 @@ test('updates shared state after form submission', async () => {
     });
   });
 });
+
+test('renders training progress from backend', async () => {
+  axios.get.mockImplementation((url) => {
+    if (url === '/api/training_progress') {
+      return Promise.resolve({ data: { current_epoch: 3, total_epochs: 10, loss: 0.123 } });
+    }
+    return Promise.resolve({ data: { message: 'Hello from backend!' } });
+  });
+
+  await act(async () => {
+    render(<App />);
+  });
+
+  expect(await screen.findByText(/Training Progress/i)).toBeInTheDocument();
+  expect(await screen.findByText(/Current Epoch: 3/i)).toBeInTheDocument();
+  expect(await screen.findByText(/Total Epochs: 10/i)).toBeInTheDocument();
+  expect(await screen.findByText(/Loss: 0.123/i)).toBeInTheDocument();
+});
+
+test('shows error if training progress cannot be fetched', async () => {
+  axios.get.mockImplementation((url) => {
+    if (url === '/api/training_progress') {
+      return Promise.reject(new Error('Network error'));
+    }
+    return Promise.resolve({ data: { message: 'Hello from backend!' } });
+  });
+
+  await act(async () => {
+    render(<App />);
+  });
+
+  expect(await screen.findByText(/Could not fetch training progress/i)).toBeInTheDocument();
+});
