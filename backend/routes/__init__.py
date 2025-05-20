@@ -1,6 +1,13 @@
 from flask import Blueprint, jsonify, request
 from backend.model_config_store import model_config_store
 
+# In-memory training progress (for demo; in production, use a better store)
+training_progress = {
+    "current_epoch": 0,
+    "total_epochs": 0,
+    "loss": None
+}
+
 def register_routes(app):
     @app.route("/api/hello")
     def hello():
@@ -37,3 +44,8 @@ def register_routes(app):
         except Exception as e:
             app.logger.error("An unexpected error occurred: %s", str(e))
             return jsonify({"error": "An unexpected error occurred"}), 500
+
+    @app.route("/api/training_progress", methods=["GET"])
+    def get_training_progress():
+        # Return current training progress (epoch, loss, etc.)
+        return jsonify(training_progress)

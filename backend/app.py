@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 from flask import Flask, send_from_directory
 from flask_cors import CORS
-from backend.routes import register_routes
+from backend.routes import register_routes, training_progress
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -16,6 +16,9 @@ secret_key = os.getenv("SECRET_KEY")
 app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), '../frontend/build'), template_folder="templates")
 CORS(app)
 register_routes(app)
+
+# In-memory training progress (for demo; in production, use a better store)
+# from backend.routes import training_progress
 
 # Serve React frontend
 @app.route('/', defaults={'path': ''})
