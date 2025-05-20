@@ -1,7 +1,6 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import App from './App';
 import axios from 'axios';
-import { act } from 'react';
 
 jest.mock('axios');
 
@@ -19,9 +18,7 @@ beforeEach(() => {
 test('renders data from backend', async () => {
   axios.get.mockResolvedValue({ data: { message: 'Hello from Flask!' } });
 
-  await act(async () => {
-    render(<App />);
-  });
+  render(<App />);
 
   const messageElement = await screen.findByText(/Hello from Flask!/i);
   expect(messageElement).toBeInTheDocument();
@@ -30,18 +27,14 @@ test('renders data from backend', async () => {
 test('handles backend error gracefully', async () => {
   axios.get.mockRejectedValue(new Error('Backend is down'));
 
-  await act(async () => {
-    render(<App />);
-  });
+  render(<App />);
 
   const errorElement = await screen.findByText(/Error fetching data/i);
   expect(errorElement).toBeInTheDocument();
 });
 
 test('renders the form with all input fields', async () => {
-  await act(async () => {
-    render(<App />);
-  });
+  render(<App />);
 
   expect(screen.getByLabelText(/model type/i)).toBeInTheDocument();
   expect(screen.getByLabelText(/loss function/i)).toBeInTheDocument();
@@ -49,10 +42,8 @@ test('renders the form with all input fields', async () => {
   expect(screen.getByLabelText(/learning rate/i)).toBeInTheDocument();
 });
 
-test('updates form state on input change', async () => {
-  await act(async () => {
-    render(<App />);
-  });
+test('updates optimizer field correctly', async () => {
+  render(<App />);
 
   const optimizerSelect = screen.getByLabelText(/optimizer/i);
   fireEvent.change(optimizerSelect, { target: { value: 'Adam' } });
@@ -60,17 +51,22 @@ test('updates form state on input change', async () => {
 });
 
 test('shows error messages for invalid inputs', async () => {
-  await act(async () => {
-    render(<App />);
-  });
+  render(<App />);
 
-  const submitButton = screen.getByText(/submit/i);
-  fireEvent.click(submitButton);
+  // Use the first submit button (model form)
+  const submitButtons = screen.getAllByText(/submit/i);
+  fireEvent.click(submitButtons[0]);
 
   await waitFor(() => {
     expect(screen.getByText(/Model type is required/i)).toBeInTheDocument();
+  });
+  await waitFor(() => {
     expect(screen.getByText(/Loss function is required/i)).toBeInTheDocument();
+  });
+  await waitFor(() => {
     expect(screen.getByText(/Optimizer is required/i)).toBeInTheDocument();
+  });
+  await waitFor(() => {
     expect(screen.getByText(/Learning rate must be a valid number/i)).toBeInTheDocument();
   });
 });
@@ -78,16 +74,16 @@ test('shows error messages for invalid inputs', async () => {
 test('submits the form with valid inputs', async () => {
   axios.post.mockResolvedValueOnce({ data: { success: true } });
 
-  await act(async () => {
-    render(<App />);
-  });
+  render(<App />);
 
   fireEvent.change(screen.getByLabelText(/model type/i), { target: { value: 'CNN' } });
   fireEvent.change(screen.getByLabelText(/loss function/i), { target: { value: 'CrossEntropy' } });
   fireEvent.change(screen.getByLabelText(/optimizer/i), { target: { value: 'Adam' } });
   fireEvent.change(screen.getByLabelText(/learning rate/i), { target: { value: '0.001' } });
 
-  fireEvent.click(screen.getByText(/submit/i));
+  // Use the first submit button (model form)
+  const submitButtons = screen.getAllByText(/submit/i);
+  fireEvent.click(submitButtons[0]);
 
   await waitFor(() =>
     expect(axios.post).toHaveBeenCalledWith('/api/submit', {
@@ -99,8 +95,6 @@ test('submits the form with valid inputs', async () => {
   );
 
   expect(window.alert).toHaveBeenCalledWith("Form submitted successfully!");
-  // Remove if "submission successful" isn't actually shown in UI
-  // expect(screen.getByText(/submission successful/i)).toBeInTheDocument();
 });
 
 test('updates shared state after form submission', async () => {
@@ -108,9 +102,7 @@ test('updates shared state after form submission', async () => {
 
   const mockSharedState = jest.fn();
   // Replace this with actual dependency injection if App expects a prop
-  await act(async () => {
-    render(<App setSharedState={mockSharedState} />);
-  });
+  render(<App setSharedState={mockSharedState} />);
   
   const messageElement = await screen.findByText(/Hello from backend!/i);
   expect(messageElement).toBeInTheDocument();
@@ -120,7 +112,9 @@ test('updates shared state after form submission', async () => {
   fireEvent.change(screen.getByLabelText(/optimizer/i), { target: { value: 'SGD' } });
   fireEvent.change(screen.getByLabelText(/learning rate/i), { target: { value: '0.01' } });
 
-  fireEvent.click(screen.getByText(/submit/i));
+  // Use the first submit button (model form)
+  const submitButtons = screen.getAllByText(/submit/i);
+  fireEvent.click(submitButtons[0]);
 
   await waitFor(() => {
     expect(mockSharedState).toHaveBeenCalledWith({
@@ -140,9 +134,7 @@ test('renders training progress from backend', async () => {
     return Promise.resolve({ data: { message: 'Hello from backend!' } });
   });
 
-  await act(async () => {
-    render(<App />);
-  });
+  render(<App />);
 
   expect(await screen.findByText(/Training Progress/i)).toBeInTheDocument();
   expect(await screen.findByText(/Current Epoch: 3/i)).toBeInTheDocument();
@@ -158,9 +150,7 @@ test('shows error if training progress cannot be fetched', async () => {
     return Promise.resolve({ data: { message: 'Hello from backend!' } });
   });
 
-  await act(async () => {
-    render(<App />);
-  });
+  render(<App />);
 
   expect(await screen.findByText(/Could not fetch training progress/i)).toBeInTheDocument();
 });

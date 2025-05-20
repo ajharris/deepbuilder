@@ -3,6 +3,7 @@ import Header from "./components/Header";
 import Message from "./components/Message";
 import Form from "./components/Form";
 import TrainingProgress from "./components/TrainingProgress";
+import FileUpload from './components/FileUpload';
 
 function App({ setSharedState }) {
   return (
@@ -11,6 +12,7 @@ function App({ setSharedState }) {
       <Message />
       <Form setSharedState={setSharedState}/>
       <TrainingProgress />
+      <FileUpload />
     </div>
   );
 }
