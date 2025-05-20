@@ -21,7 +21,8 @@ register_routes(app)
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_react(path):
-    if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
+    full_path = os.path.normpath(os.path.join(app.static_folder, path))
+    if full_path.startswith(app.static_folder) and os.path.exists(full_path):
         return send_from_directory(app.static_folder, path)
     return send_from_directory(app.static_folder, 'index.html')
 
