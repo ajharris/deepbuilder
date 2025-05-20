@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from backend.model_config_store import model_config_store
 import os
+from werkzeug.utils import secure_filename
 
 # In-memory training progress (for demo; in production, use a better store)
 training_progress = {
@@ -63,7 +64,8 @@ def register_routes(app):
             file = request.files['file']
             if file.filename == '':
                 return jsonify({'error': 'No selected file'}), 400
-            save_path = os.path.join(UPLOAD_DIR, file.filename)
+            sanitized_filename = secure_filename(file.filename)
+            save_path = os.path.join(UPLOAD_DIR, sanitized_filename)
             file.save(save_path)
             return jsonify({'message': 'File uploaded', 'path': save_path}), 201
         # Option 2: User provides a file path reference
