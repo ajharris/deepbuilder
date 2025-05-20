@@ -31,8 +31,8 @@ register_routes(app)
 @app.route('/<path:path>')
 def serve_react(path):
     # Serve static files if they exist, otherwise serve index.html for React Router
-    static_file = os.path.join(app.static_folder, path)
-    if path != "" and os.path.exists(static_file):
+    static_file = os.path.normpath(os.path.join(app.static_folder, path))
+    if path != "" and static_file.startswith(app.static_folder) and os.path.exists(static_file):
         return send_from_directory(app.static_folder, path)
     return send_from_directory(app.static_folder, 'index.html')
 
