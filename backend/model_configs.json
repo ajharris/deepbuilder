@@ -89,5 +89,47 @@
       "epochs": 10
     },
     "model_type": "neural_network"
+  },
+  {
+    "hyperparameters": {
+      "batch_size": 32,
+      "epochs": 10
+    },
+    "model_type": "neural_network"
+  },
+  {
+    "hyperparameters": {
+      "batch_size": 32,
+      "epochs": 10
+    },
+    "model_type": "neural_network"
+  },
+  {
+    "hyperparameters": {
+      "batch_size": 32,
+      "epochs": 10
+    },
+    "model_type": "neural_network"
+  },
+  {
+    "hyperparameters": {
+      "batch_size": 32,
+      "epochs": 10
+    },
+    "model_type": "neural_network"
+  },
+  {
+    "hyperparameters": {
+      "batch_size": 32,
+      "epochs": 10
+    },
+    "model_type": "neural_network"
+  },
+  {
+    "hyperparameters": {
+      "batch_size": 32,
+      "epochs": 10
+    },
+    "model_type": "neural_network"
   }
 ]
