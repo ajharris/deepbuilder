@@ -8,6 +8,7 @@ import unittest
 from flask import Flask
 from backend.app import app  # absolute import now works
 from dotenv import load_dotenv
+import io
 
 class TestFlaskBackend(unittest.TestCase):
 
@@ -80,6 +81,42 @@ class TestFlaskBackend(unittest.TestCase):
         response = self.app.post("/api/modelconfig", data="not_a_json", content_type="text/plain")
         self.assertEqual(response.status_code, 400)
         self.assertIn("error", response.json)
+
+    def test_upload_file_success(self):
+        data = {
+            'file': (io.BytesIO(b"test file content"), 'test.txt')
+        }
+        response = self.app.post('/api/upload', data=data, content_type='multipart/form-data')
+        self.assertEqual(response.status_code, 201)
+        self.assertIn('File uploaded', response.json['message'])
+        self.assertTrue(response.json['path'].endswith('test.txt'))
+
+    def test_upload_file_no_file(self):
+        response = self.app.post('/api/upload', data={}, content_type='multipart/form-data')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('No file or file_path provided', response.json['error'])
+
+    def test_upload_file_reference_success(self):
+        # Create a temp file to reference
+        import tempfile
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            tmp.write(b"abc")
+            tmp_path = tmp.name
+        response = self.app.post('/api/upload', json={'file_path': tmp_path})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('File reference accepted', response.json['message'])
+        self.assertEqual(response.json['path'], tmp_path)
+        os.remove(tmp_path)
+
+    def test_upload_file_reference_invalid(self):
+        response = self.app.post('/api/upload', json={'file_path': '/not/a/real/path.txt'})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('Invalid or missing file_path', response.json['error'])
+
+    def test_upload_file_no_data(self):
+        response = self.app.post('/api/upload')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('No file or file_path provided', response.json['error'])
 
 if __name__ == "__main__":
     unittest.main()

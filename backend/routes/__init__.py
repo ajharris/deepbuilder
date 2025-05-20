@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from backend.model_config_store import model_config_store
+import os
 
 # In-memory training progress (for demo; in production, use a better store)
 training_progress = {
@@ -7,6 +8,11 @@ training_progress = {
     "total_epochs": 0,
     "loss": None
 }
+
+UPLOAD_DIR = os.getenv("UPLOAD_DIR", os.path.join(os.path.dirname(__file__), '../../uploads'))
+
+# Ensure upload directory exists
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 def register_routes(app):
     @app.route("/api/hello")
@@ -49,3 +55,24 @@ def register_routes(app):
     def get_training_progress():
         # Return current training progress (epoch, loss, etc.)
         return jsonify(training_progress)
+
+    @app.route('/api/upload', methods=['POST'])
+    def upload_file():
+        # Option 1: User uploads a file
+        if 'file' in request.files:
+            file = request.files['file']
+            if file.filename == '':
+                return jsonify({'error': 'No selected file'}), 400
+            save_path = os.path.join(UPLOAD_DIR, file.filename)
+            file.save(save_path)
+            return jsonify({'message': 'File uploaded', 'path': save_path}), 201
+        # Option 2: User provides a file path reference
+        elif request.is_json:
+            data = request.get_json()
+            file_path = data.get('file_path')
+            if file_path and os.path.exists(file_path):
+                return jsonify({'message': 'File reference accepted', 'path': file_path}), 200
+            else:
+                return jsonify({'error': 'Invalid or missing file_path'}), 400
+        else:
+            return jsonify({'error': 'No file or file_path provided'}), 400
