@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+from backend.model_config_store import model_config_store
 
 def register_routes(app):
     @app.route("/api/hello")
@@ -27,9 +28,9 @@ def register_routes(app):
             if not isinstance(data.get("hyperparameters"), dict):
                 return jsonify({"error": "Invalid type for hyperparameters, expected a dictionary"}), 422
 
-            # Simulate database save (replace with actual DB logic)
-            # Example: db.save_model_config(data)
-            saved_id = 1  # Placeholder for saved record ID
+            # Store config in-memory and local file
+            model_config_store.add(data)
+            saved_id = len(model_config_store.get_all())
 
             return jsonify({"message": "Model configuration saved successfully", "id": saved_id}), 201
 
