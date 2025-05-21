@@ -30,7 +30,8 @@ def fetch_wikipedia_summary(term):
         else:
             return f"No summary found for '{term}'.", True
     except Exception as e:
-        return f"Error fetching summary: {str(e)}", True
+        print(f"Exception occurred while fetching summary: {str(e)}")  # Log the exception
+        return "An error occurred while fetching the summary.", True
 
 def register_routes(app):
     @app.route("/api/hello")
@@ -127,5 +128,5 @@ def register_routes(app):
             return jsonify({"error": "Missing 'term' query parameter."}), 400
         summary, is_error = fetch_wikipedia_summary(term)
         if is_error:
-            return jsonify({"error": summary}), 404
+            return jsonify({"error": "Unable to fetch the requested summary. Please try again later."}), 404
         return jsonify({"summary": summary})
