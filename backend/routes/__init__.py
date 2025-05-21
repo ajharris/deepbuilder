@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 from backend.model_config_store import model_config_store
 import os
 from werkzeug.utils import secure_filename
+import requests
 
 # In-memory training progress (for demo; in production, use a better store)
 training_progress = {
@@ -14,6 +15,22 @@ UPLOAD_DIR = os.getenv("UPLOAD_DIR", os.path.join(os.path.dirname(__file__), '..
 
 # Ensure upload directory exists
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+def fetch_wikipedia_summary(term):
+    """
+    Fetch a summary for a term from Wikipedia API.
+    Returns a string summary or an error message.
+    """
+    try:
+        url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{term}"
+        resp = requests.get(url, timeout=5)
+        if resp.status_code == 200:
+            data = resp.json()
+            return data.get("extract", "No summary found."), False
+        else:
+            return f"No summary found for '{term}'.", True
+    except Exception as e:
+        return f"Error fetching summary: {str(e)}", True
 
 def register_routes(app):
     @app.route("/api/hello")
@@ -98,3 +115,17 @@ def register_routes(app):
             "lossFunctions": ["CrossEntropy", "MSE", "MAE", "Dice", "BCEWithLogits"],
             "optimizers": ["Adam", "SGD", "RMSprop", "Adagrad", "AdamW"]
         })
+
+    @app.route("/api/explanation", methods=["GET"])
+    def get_explanation():
+        """
+        Query param: term (string)
+        Returns: { summary: string }
+        """
+        term = request.args.get("term", "")
+        if not term:
+            return jsonify({"error": "Missing 'term' query parameter."}), 400
+        summary, is_error = fetch_wikipedia_summary(term)
+        if is_error:
+            return jsonify({"error": summary}), 404
+        return jsonify({"summary": summary})

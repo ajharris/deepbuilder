@@ -1,5 +1,35 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { parameterMeta } from "./ParameterExplanations";
+
+function useWikiExplanation(term) {
+  const [summary, setSummary] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!term) {
+      setSummary("");
+      setError(null);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    setSummary("");
+    axios
+      .get(`/api/explanation?term=${encodeURIComponent(term)}`)
+      .then((res) => {
+        setSummary(res.data.summary);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.response?.data?.error || "Error fetching explanation");
+        setLoading(false);
+      });
+  }, [term]);
+
+  return { summary, loading, error };
+}
 
 function Form({ setSharedState }) {
   const [formData, setFormData] = useState({
@@ -14,6 +44,7 @@ function Form({ setSharedState }) {
     lossFunctions: [],
     optimizers: [],
   });
+  const [selectedParam, setSelectedParam] = useState(null);
 
   useEffect(() => {
     axios
@@ -25,6 +56,10 @@ function Form({ setSharedState }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+  };
+
+  const handleFocus = (param) => {
+    setSelectedParam(param);
   };
 
   const validate = () => {
@@ -47,90 +82,143 @@ function Form({ setSharedState }) {
         .then(() => {
           alert("Form submitted successfully!");
           if (setSharedState) {
-            setSharedState(formData); // ✅ This is what your test expects!
+            setSharedState(formData);
           }
         })
         .catch(() => alert("Error submitting form."));
     }
   };
 
-  // Defensive: ensure options are always arrays
   const safeOptions = {
     modelTypes: Array.isArray(options.modelTypes) ? options.modelTypes : [],
     lossFunctions: Array.isArray(options.lossFunctions) ? options.lossFunctions : [],
     optimizers: Array.isArray(options.optimizers) ? options.optimizers : [],
   };
 
+  // Dynamic explanation logic
+  const paramWiki = selectedParam ? parameterMeta[selectedParam]?.wiki : null;
+  const { summary: paramSummary, loading: paramLoading, error: paramError } = useWikiExplanation(paramWiki);
+
+  // Option explanation logic
+  let optionWiki = null;
+  let optionValue = null;
+  if (selectedParam && formData[selectedParam] && parameterMeta[selectedParam]?.options) {
+    optionValue = formData[selectedParam];
+    optionWiki = parameterMeta[selectedParam].options[optionValue]?.wiki;
+  }
+  const { summary: optionSummary, loading: optionLoading, error: optionError } = useWikiExplanation(optionWiki);
+
   return (
-    <form onSubmit={handleSubmit}>
-      <div>
-        <label htmlFor="modelType">Model Type:</label>
-        <select
-          id="modelType"
-          name="modelType"
-          value={formData.modelType}
-          onChange={handleChange}
-        >
-          <option value="">Select Model Type</option>
-          {safeOptions.modelTypes.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
-        </select>
-        {errors.modelType && <p style={{ color: "red" }}>{errors.modelType}</p>}
+    <div style={{ display: "flex", alignItems: "flex-start" }}>
+      <form onSubmit={handleSubmit} style={{ flex: 1, maxWidth: 500 }}>
+        <div>
+          <label htmlFor="modelType">Model Type:</label>
+          <select
+            id="modelType"
+            name="modelType"
+            value={formData.modelType}
+            onChange={handleChange}
+            onFocus={() => handleFocus("modelType")}
+            onClick={() => handleFocus("modelType")}
+          >
+            <option value="">Select Model Type</option>
+            {safeOptions.modelTypes.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+          {errors.modelType && <p style={{ color: "red" }}>{errors.modelType}</p>}
+          {selectedParam === "modelType" && formData.modelType && (
+            <div className="option-explanation-box">
+              <strong>Selected:</strong> {formData.modelType}<br />
+              {optionLoading ? "Loading..." : optionError ? optionError : optionSummary}
+            </div>
+          )}
+        </div>
+        <div>
+          <label htmlFor="lossFunction">Loss Function:</label>
+          <select
+            id="lossFunction"
+            name="lossFunction"
+            value={formData.lossFunction}
+            onChange={handleChange}
+            onFocus={() => handleFocus("lossFunction")}
+            onClick={() => handleFocus("lossFunction")}
+          >
+            <option value="">Select Loss Function</option>
+            {safeOptions.lossFunctions.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+          {errors.lossFunction && <p style={{ color: "red" }}>{errors.lossFunction}</p>}
+          {selectedParam === "lossFunction" && formData.lossFunction && (
+            <div className="option-explanation-box">
+              <strong>Selected:</strong> {formData.lossFunction}<br />
+              {optionLoading ? "Loading..." : optionError ? optionError : optionSummary}
+            </div>
+          )}
+        </div>
+        <div>
+          <label htmlFor="optimizer">Optimizer:</label>
+          <select
+            id="optimizer"
+            name="optimizer"
+            value={formData.optimizer}
+            onChange={handleChange}
+            onFocus={() => handleFocus("optimizer")}
+            onClick={() => handleFocus("optimizer")}
+          >
+            <option value="">Select Optimizer</option>
+            {safeOptions.optimizers.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+          {errors.optimizer && <p style={{ color: "red" }}>{errors.optimizer}</p>}
+          {selectedParam === "optimizer" && formData.optimizer && (
+            <div className="option-explanation-box">
+              <strong>Selected:</strong> {formData.optimizer}<br />
+              {optionLoading ? "Loading..." : optionError ? optionError : optionSummary}
+            </div>
+          )}
+        </div>
+        <div>
+          <label htmlFor="learningRate">Learning Rate:</label>
+          <input
+            type="text"
+            id="learningRate"
+            name="learningRate"
+            value={formData.learningRate}
+            onChange={handleChange}
+            onFocus={() => handleFocus("learningRate")}
+            onClick={() => handleFocus("learningRate")}
+          />
+          {errors.learningRate && <p style={{ color: "red" }}>{errors.learningRate}</p>}
+        </div>
+        <button type="submit">Submit</button>
+      </form>
+      {/* Right panel for parameter explanation */}
+      <div className="parameter-explanation-panel">
+        <h3>Parameter Explanation</h3>
+        {selectedParam && parameterMeta[selectedParam] ? (
+          <>
+            <strong>{parameterMeta[selectedParam].label}</strong>
+            <div style={{ minHeight: 60 }}>
+              {paramLoading ? "Loading..." : paramError ? paramError : paramSummary}
+            </div>
+          </>
+        ) : (
+          <p>Select a parameter to see its explanation.</p>
+        )}
       </div>
-      <div>
-        <label htmlFor="lossFunction">Loss Function:</label>
-        <select
-          id="lossFunction"
-          name="lossFunction"
-          value={formData.lossFunction}
-          onChange={handleChange}
-        >
-          <option value="">Select Loss Function</option>
-          {safeOptions.lossFunctions.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
-        </select>
-        {errors.lossFunction && <p style={{ color: "red" }}>{errors.lossFunction}</p>}
-      </div>
-      <div>
-        <label htmlFor="optimizer">Optimizer:</label>
-        <select
-          id="optimizer"
-          name="optimizer"
-          value={formData.optimizer}
-          onChange={handleChange}
-        >
-          <option value="">Select Optimizer</option>
-          {safeOptions.optimizers.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
-        </select>
-        {errors.optimizer && <p style={{ color: "red" }}>{errors.optimizer}</p>}
-      </div>
-      <div>
-        <label htmlFor="learningRate">Learning Rate:</label>
-        <input
-          type="text"
-          id="learningRate"
-          name="learningRate"
-          value={formData.learningRate}
-          onChange={handleChange}
-        />
-        {errors.learningRate && <p style={{ color: "red" }}>{errors.learningRate}</p>}
-      </div>
-      <button type="submit">Submit</button>
-    </form>
+    </div>
   );
 }
 
-// Add default props for testing environments
 Form.defaultProps = {
   setSharedState: undefined,
 };

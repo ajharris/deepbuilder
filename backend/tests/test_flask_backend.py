@@ -10,6 +10,11 @@ from backend.app import app  # absolute import now works
 from dotenv import load_dotenv
 import io
 
+# --- FIX: Define /api/error route before tests run ---
+@app.route('/api/error')
+def error_route():
+    return {"error": "Something went wrong"}, 500
+
 class TestFlaskBackend(unittest.TestCase):
 
     def setUp(self):
@@ -34,11 +39,6 @@ class TestFlaskBackend(unittest.TestCase):
         self.assertEqual(response.json, {"message": "Hello from Flask!"})
 
     def test_api_hello_route_error_handling(self):
-        with self.app.application.app_context():
-            @self.app.application.route('/api/error')
-            def error_route():
-                return {"error": "Something went wrong"}, 500
-
         response = self.app.get('/api/error')
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.json, {"error": "Something went wrong"})
