@@ -86,3 +86,15 @@ def register_routes(app):
                 return jsonify({'error': 'Invalid or missing file_path'}), 400
         else:
             return jsonify({'error': 'No file or file_path provided'}), 400
+
+    @app.route("/api/parameter-options", methods=["GET"])
+    def parameter_options():
+        """
+        Returns available options for model types, loss functions, and optimizers.
+        In a real app, this could be loaded from a config file or database.
+        """
+        return jsonify({
+            "modelTypes": ["CNN", "RNN", "UNet", "ResNet", "Transformer"],
+            "lossFunctions": ["CrossEntropy", "MSE", "MAE", "Dice", "BCEWithLogits"],
+            "optimizers": ["Adam", "SGD", "RMSprop", "Adagrad", "AdamW"]
+        })

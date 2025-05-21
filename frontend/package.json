@@ -43,5 +43,8 @@
     "transformIgnorePatterns": [
       "/node_modules/(?!axios)/"
     ]
+  },
+  "devDependencies": {
+    "@babel/preset-react": "^7.27.1"
   }
 }

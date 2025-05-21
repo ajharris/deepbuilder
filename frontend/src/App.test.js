@@ -1,6 +1,7 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import App from './App';
 import axios from 'axios';
+import { act } from 'react';
 
 jest.mock('axios');
 
@@ -11,14 +12,42 @@ beforeAll(() => {
 
 // Ensure axios mock is reset before each test
 beforeEach(() => {
-  jest.clearAllMocks();
-  axios.get.mockResolvedValue({ data: { message: 'Hello from backend!' } });
+  axios.get.mockImplementation((url) => {
+    if (url === '/api/parameter-options') {
+      return Promise.resolve({ data: {
+        modelTypes: ['CNN', 'RNN', 'UNet', 'ResNet', 'Transformer'],
+        lossFunctions: ['CrossEntropy', 'MSE', 'MAE', 'Dice', 'BCEWithLogits'],
+        optimizers: ['Adam', 'SGD', 'RMSprop', 'Adagrad', 'AdamW'],
+      }});
+    }
+    if (url === '/api/hello') {
+      return Promise.resolve({ data: { message: 'Hello from backend!' } });
+    }
+    if (url === '/api/training_progress') {
+      return Promise.resolve({ data: { current_epoch: 1, total_epochs: 5, loss: 0.1 } });
+    }
+    // fallback for other GETs
+    return Promise.resolve({ data: {} });
+  });
+  axios.post.mockResolvedValue({ data: { success: true } });
 });
+
+afterEach(() => {
+  jest.clearAllMocks();
+});
+
+const customRender = async (ui, options) => {
+  let result;
+  await act(async () => {
+    result = render(ui, options);
+  });
+  return result;
+};
 
 test('renders data from backend', async () => {
   axios.get.mockResolvedValue({ data: { message: 'Hello from Flask!' } });
 
-  render(<App />);
+  await customRender(<App />);
 
   const messageElement = await screen.findByText(/Hello from Flask!/i);
   expect(messageElement).toBeInTheDocument();
@@ -27,14 +56,14 @@ test('renders data from backend', async () => {
 test('handles backend error gracefully', async () => {
   axios.get.mockRejectedValue(new Error('Backend is down'));
 
-  render(<App />);
+  await customRender(<App />);
 
   const errorElement = await screen.findByText(/Error fetching data/i);
   expect(errorElement).toBeInTheDocument();
 });
 
 test('renders the form with all input fields', async () => {
-  render(<App />);
+  await customRender(<App />);
 
   expect(screen.getByLabelText(/model type/i)).toBeInTheDocument();
   expect(screen.getByLabelText(/loss function/i)).toBeInTheDocument();
@@ -43,7 +72,7 @@ test('renders the form with all input fields', async () => {
 });
 
 test('updates optimizer field correctly', async () => {
-  render(<App />);
+  await customRender(<App />);
 
   const optimizerSelect = screen.getByLabelText(/optimizer/i);
   fireEvent.change(optimizerSelect, { target: { value: 'Adam' } });
@@ -51,7 +80,7 @@ test('updates optimizer field correctly', async () => {
 });
 
 test('shows error messages for invalid inputs', async () => {
-  render(<App />);
+  await customRender(<App />);
 
   // Use the first submit button (model form)
   const submitButtons = screen.getAllByText(/submit/i);
@@ -74,7 +103,7 @@ test('shows error messages for invalid inputs', async () => {
 test('submits the form with valid inputs', async () => {
   axios.post.mockResolvedValueOnce({ data: { success: true } });
 
-  render(<App />);
+  await customRender(<App />);
 
   fireEvent.change(screen.getByLabelText(/model type/i), { target: { value: 'CNN' } });
   fireEvent.change(screen.getByLabelText(/loss function/i), { target: { value: 'CrossEntropy' } });
@@ -102,7 +131,7 @@ test('updates shared state after form submission', async () => {
 
   const mockSharedState = jest.fn();
   // Replace this with actual dependency injection if App expects a prop
-  render(<App setSharedState={mockSharedState} />);
+  await customRender(<App setSharedState={mockSharedState} />);
   
   const messageElement = await screen.findByText(/Hello from backend!/i);
   expect(messageElement).toBeInTheDocument();
@@ -134,7 +163,7 @@ test('renders training progress from backend', async () => {
     return Promise.resolve({ data: { message: 'Hello from backend!' } });
   });
 
-  render(<App />);
+  await customRender(<App />);
 
   expect(await screen.findByText(/Training Progress/i)).toBeInTheDocument();
   expect(await screen.findByText(/Current Epoch: 3/i)).toBeInTheDocument();
@@ -150,7 +179,7 @@ test('shows error if training progress cannot be fetched', async () => {
     return Promise.resolve({ data: { message: 'Hello from backend!' } });
   });
 
-  render(<App />);
+  await customRender(<App />);
 
   expect(await screen.findByText(/Could not fetch training progress/i)).toBeInTheDocument();
 });
