@@ -36,3 +36,33 @@
     transform: rotate(360deg);
   }
 }
+
+/* Panel styles for parameter explanations */
+.parameter-explanation-panel {
+  min-width: 280px;
+  margin-left: 32px;
+  background: #f9fafb;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  position: sticky;
+  top: 16px;
+}
+
+.option-explanation-box {
+  background: #f6f8fa;
+  border: 1px solid #ddd;
+  padding: 8px;
+  margin-top: 4px;
+  border-radius: 4px;
+}
+
+.form-row {
+  margin-bottom: 20px;
+}
+
+@media (max-width: 900px) {
+  .parameter-explanation-panel {
+    display: none;
+  }
+}
